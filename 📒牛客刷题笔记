@@ -1,0 +1,1641 @@
+@[toc]
+
+# 一、 javascript
+## 语法基础
+### void
+void 是 JavaScript 中非常重要的关键字，该操作符指定要计算一个表达式但是不返回值。
+void(0) 计算为 0，但 Javascript 上没有任何效果。
+void是一元运算符，它出现在`操作数`之前，操作数可以是任意类型，操作数会照常计算，但忽略计算结果并返回undefined。
+由于void会忽略操作数的值，因此`在操作数具有副作用`的时候使用void来让程序更具语义
+```
+console.log(void 0); // undefined
+console.log(void(0)); // undefined
+```
+常见的作用:
+
+1. 替代undefined
+由于undefined并不是一个关键字，其在IE8-浏览器中会被重写，在高版本函数作用域中也会被重写；所以可以用void 0 来替换undefined
+```
+var undefined = 10;
+console.log(undefined);//IE8-浏览器下为10，高版本浏览器下为undefined
+function test(){
+    var undefined = 10;
+    console.log(undefined);
+}
+console.log(test());//所有浏览器下都是10
+```
+2. 客户端URL
+这个运算符最常用在客户端URL——javascript:URL中，在URL中可以写带有副作用的表达式，而void则让浏览器不必显示这个表达式的计算结果。例如，经常在HTML代码中的`<a>`标签里使用void运算符
+`<a href="javascript:void window.open();">打开一个新窗口</a>`
+
+3. 阻止默认事件 
+阻止默认事件的方式是给事件置返回值false
+```
+//一般写法
+<a href="http://example.com" onclick="f();return false;">文字</a>
+使用void运算符可以取代上面写法
+<a href="javascript:void(f())">文字</a>
+```
+
+### 块级作用域 es6好像有了？
+```
+for(var i=0;i<3;i++){
+... ...
+}
+console.log('i='+i);//i=3
+```
+JavaScript没有块级作用域。
+```
+(function(){
+//块级作用域
+}))();
+```
+模拟块级作用域，避免全局变量污染。
+### 变量
+#### 变量定义
+- 第一个字符必须是一个` ASCII 字母（大小写均可`），或一个`下划线(_)`。
+- 注意第一个字符`不能是数字`。 
+- 后续的字符必须是字母、数字或下划线，不能有空格。  
+- 变量名称一定`不能是保留字`。
+#### let const var #ES6 #不清楚
+1.let 与var不同，存在块级作用域，在for循环中声明，循环之外销毁 所以 i not defined
+
+2.const 声明一个常量无法更改，所以TypeError；但是！！如果const出来的是一个对象他的属性是可以更改的。
+#### 数组解构赋值 #ES6 #不清楚
+```
+let [head, ...tail] = [1, 2, 3, 4];
+head // 1 tail // [2, 3, 4]
+```
+ ```
+ let [ , , third] = ["foo", "bar", "baz"];
+third // "baz" 
+```
+#### 变量声明
+在全局作用域中声明的变量、函数会变成window对象的属性和方法。
+使用var声明的全局变量不可删除；
+省略var声明的全局变量可删除。
+```
+var a = 1;
+window.b = 2;
+c = 3;
+this.d = 4;
+var aa = Object.getOwnPropertyDescriptor(window,'a'); //configurable:false,enumerable:true,value:2,writable:true
+var bb = Object.getOwnPropertyDescriptor(window,'b'); //configurable:true,enumerable:true,value:2,writable:true
+var cc = Object.getOwnPropertyDescriptor(window,'c'); //configurable:true,enumerable:true,value:2,writable:true
+var dd = Object.getOwnPropertyDescriptor(window,'d'); //configurable:true,enumerable:true,value:2,writable:true
+delete a; // 无法删除
+delete b; // 可删除
+delete c; // 可删除
+delete d; // 可删除
+```
+#### 声明提升
+- 变量提升：函数声明和变量声明总是会被解释器悄悄地被"提升"到方法体的最顶部。
+- 初始化不会提升
+```
+console.log(n);//undefined
+var n=3;
+```
+#### 重复变量声明
+使用var语句重复声明语句是`合法且无害的`，JavaScript会`忽略同一变量的后续声明`。
+
+3.源码分析
+```
+if(! "a" in window){
+var a = 1;
+}
+alert(a);
+```
+等价于
+```
+var a;
+if(!"a"in window){
+a =1;
+}
+alert(a);
+```
+（1）JavaScript无块级作用域，在全局作用域中声明变量a为window的属性；
+（2）window存在属性a，if语句不成立，a=1赋值语句不执行；
+（3）弹出变量a为undefined；
+
+## 操作符
+### 异或^ 左移<<
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181203112354164.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FtYXJsaWFubmE=,size_16,color_FFFFFF,t_70)
+> `<< 表示左移` 1=01，左移4位：010000=16，16-1=15=1111
+>  `符号^表示异或（同0异1）` 10=1010，1010^1111=0101=5
+
+```javascript
+function a(a)
+{
+  a^=(1<<4)-1;
+  return a;
+}
+a(10)
+```
+### i++ 与 ++i 以及switch
+
+> [js中i++与++i的区别
+](https://blog.csdn.net/hjb2722404/article/details/50423804) 
+`var a=i++;` 使用i++时，i先将自身的值赋值给变量a，然后再自增1 
+`var a=++i;` 使用++i时，i先将自身的值自增1,再将自增后的值赋值给变量a
+
+```javascript
+var x=0;
+switch(++x) //1
+{
+	case 0: ++x;
+	case 1: ++x; //2，无break，继续
+	case 2: ++x; //3
+}
+```
+
+--------------
+## 数据类型
+数据类型又是对象，Undefined、Null为啥不是对象呢？有什么关系？#不清楚
+
+6 种简单（基本/原始）数据类型：`Undefined、Null、Boolean、Number 、String、Symbol（ES6，表示独一无二的值）`
+1 种复杂数据类型：`Object`
+【菜鸟教程，但typeof不返回Array】
+引用数据类型：`对象(Object)、数组(Array)、函数(Function)`
+【牛客解析】
+复杂数据类型：`Object，Date, Array，Function，RegExp，Error`
+全局数据类型：`Math`
+
+
+### 🌟typeof操作符
+```javascript
+typeof undefined    //"undefined"
+typeof Object()     //"object"
+typeof null         //"object"
+```
+```javascript
+typeof Boolean()    //"boolean"
+typeof Number()     //"number"
+typeof String()     //"string"
+```
+```javascript
+typeof Function()   //"function"
+typeof Symbol()     //"symbol" ES6新增
+```
+### Undefined
+### Null
+### Boolean
+### String
+由双引号(")或单引号(')表示
+1. 字符字面量（转义字符）
+2. 字符串的特点：不可变 ，需要先销毁再新建，在后台操作
+3. 转换为字符串：
+
+` toString()` :`数值、布尔值、对象和字符串值`有，`null 和 undefined 值`没有这个方法
+```
+num = 10;
+num.toString(2); //"1010" 可调用一个参数
+```
+ `String()`=` toString()` +`转换null 和 undefined 值` 这个函数能够将任何类型的值转换为字符串
+
+
+
+### Number
+参考：《js高级教程》
+整数和浮点数值
+十进制 八进制（0）十六进制（0X）
+1. 浮点数值
+`永远不要测试某个特定的浮点数值。`
+2. 数值范围
+`Number.MIN_VALUE `
+`Number.MAX_VALUE`
+`Infinity(正无穷)`
+要想确定一个数值是不是位于最 小和最大的数值之间: `isFinite()`函数
+3. NaN
+NaN，即非数值(Not a Number)是一个特殊的数值
+首先，任何涉及 NaN 的操作(例如 NaN/10)都会返回 NaN
+其次，NaN 与任何值都不相等，包括 NaN 本身。
+`isNaN()函数` 先将参数`转换为数值`。某些不是数值的值会直接转换为数值；不能被转换为数值的值都会导致这个函数返回 true。
+4. 数值转换
+非数值转换为数值: `Number()、parseInt()和 parseFloat()。`
+
+`Number()`可以用于`任何数据类型`，而另两个函数则专门用于把`字符串`转换成数值
+```
+Number(true); //1
+Number(null) //0
+Number(undefined) //NaN
+Number("Hello world!"); //NaN 
+Number(""); //0
+Number("000011"); //11
+```
+`parseInt()`
+```
+parseInt(""); //NaN  对比：Number(""); //0
+parseInt("070");// 56(八进制数)
+parseInt("70"); // 70(十进制数)
+parseInt("0xf"); // 15(十六进制数)
+```
+`parseFloat()`
+
+```
+parseFloat("1234blue"); //1234 (整数)
+parseFloat("0xA"); //0
+parseFloat("22.5"); //22.5 
+parseFloat("22.34.5"); //22.34
+parseFloat("0908.5"); //908.5 
+parseFloat("3.125e7"); //31250000
+```
+### Object
+一组数据和功能的集合 
+- `对象`可以通过执行 `new `操作符后跟要创建 的`对象类型的名称`来创建。
+- `创建 Object 类型的实例`并为其添加属性和(或)方法，就可以创建`自定 义对象`，如下所示:`var o = new Object();`
+- `Object 类型`是所有它的实例的基础。换句话说， Object 类型所具有的任何属性和方法也同样存在于更具体的对象中。Object 的每个实例都具有下列属性和方法：
+	- `constructor`:保存着用于创建当前对象的函数。对于前面的例子而言，`构造函数`(constructor) 就是 Object()。
+	- `hasOwnProperty(propertyName)`:用于检查`给定的属性`在`当前对象实例`中(而不是在实例的原型中)是否存在。其中，作为参数的属性名(propertyName)必须以字符串形式指定(例如:`o.hasOwnProperty("name")`)。
+	- `isPrototypeOf(object)`:用于检查`传入的对象`是否是传入对象的原型(第 5 章将讨论原型)。
+	- `propertyIsEnumerable(propertyName)`:用于检查给定的属性是否能够使用 for-in 语句 (本章后面将会讨论)来枚举。与 hasOwnProperty()方法一样，作为参数的属性名必须以字符串形式指定。
+	- `toLocaleString()`:返回对象的字符串表示，该字符串与执行环境的地区对应。
+	- `toString()`:返回对象的字符串表示。 
+	- `valueOf()`:返回对象的字符串、数值或布尔值表示。通常与 toString()方法的返回值相同。
+
+## 引用类型
+### Object
+### Array
+#### js数组Array的方法pop() splice() sort() concat()
+> `pop()`方法用于删除数组的最后一个元素，并返回被删除的最后一个元素
+`splice()`方法从数组中添加或删除元素，并返回被删除的元素。
+`🍋sort()`方法对数组中所有的元素都进行排序，如果没有提供比较函数compareFunction，则按照字符串的Unicode码的顺序进行排序; 如果指明了 compareFunction ，那么数组会按照调用该函数的返回值排序, 小于0, a排到b前面.  ==#不清楚==
+所以以上三种方法都改变了数组。
+`concat()`方法用于连接两个或多个数组。该方法不会改变现有的数组，而仅仅会返回被连接数组的一个副本，返回一个新的数组。该数组是通过把所有的arrayX参数添加到arryaObject中生成的，如果要进行 concat()操作的参数是数组，那么添加的是数组中的元素，而不是数组。
+#### 判断一个js对象是否是Array
+- typeof(arr) 返回的是 Object
+- arr.toString() 返回的是数组的内容
+```javascript
+var a = [1,2,3,4];
+
+Array.isArray(a); //true
+Object.prototype.toString.call(a) //"[object Array]"
+a instanceof Array; //true
+
+typeof(a); //"object"
+a.toString(); //"1,2,3,4"
+```
+
+### Date
+### RegExp
+### Function
+### 基本包装类型：Boolean Number String
+### 单体内置对象：Global Math
+#### JavaScript 全局属性
+| 属性 |  描述|
+|--|--|	
+|Infinity	|代表正的无穷大的数值。
+|NaN	|指示某个值是不是数字值。
+|undefined	|指示未定义的值。
+#### JavaScript 全局函数
+|函数	|描述
+|--|--|
+|decodeURI()	|解码某个编码的 URI。
+|decodeURIComponent()	|解码一个编码的 URI 组件。
+|encodeURI()|	把字符串编码为 URI。
+|encodeURIComponent()	|把字符串编码为 URI 组件。
+|`escape()`	|对字符串进行编码。该方法不会对 `ASCII 字母和数,标点符号 * @ - _ + . / `编码，其他所有的字符都会被`转义序列`替换。
+|`unescape()`	|对由 escape() 编码的字符串进行解码。
+|`eval()`	|返回字符串表达式中的值。计算 JavaScript 字符串，并把它作为脚本代码来执行。
+|isFinite()	|检查某个值是否为有穷大的数。
+|`isNaN()	`|检查某个值是否是数字。
+|Number()	|把对象的值转换为数字。
+|`parseFloat()	`|解析一个字符串并返回一个浮点数。
+|parseInt()	|解析一个字符串并返回一个整数。
+|String()	|把对象的值转换为字符串。
+#### Math对象的四舍五入
+>`◎Math.ceil()`执行`向上舍入`，即它总是将数值向上舍入为最接近的整数；
+`◎Math.floor()`执行`向下舍入`，即它总是将数值向下舍入为最接近的整数；
+`◎Math.round()`执行`标准舍入`，即它总是将数值四舍五入为最接近的整数(这也是我们在数学课上学到的舍入规则)。
+#### Math.max vs Math.max.apply()
+```javascript
+var a = [1,4,5,2,9];
+//undefined
+Math.max(a);
+//NaN
+Math.max(1,2,3,7,1);
+//7
+Math.max.apply(null,a);
+//9
+```
+
+--------
+## js对象
+### javascript内置对象
+|  | 定义 |举例|
+|--|--|--|
+|内置对象| 由 ECMAScript 实现提供的、独立于宿主环境的所有对象，不必明确实例化内|  Boolean  Number String，Object Date  Array  Function  Regexp  Error，  Math  Global |
+|宿主对象|运行环境提供的对象，即浏览器对象|Window Document Element form image|
+|自定义对象|开发人员定义的对象
+----------
+## js函数
+### this
+>` 🌟this 关键字`: 一般而言，在Javascript中，this指向函数执行时的当前对象。
+>this 代表函数运行时，自动生成的一个内部对象，只能在函数内部使用。比如：
+```
+function test() {
+    this.x = 1;
+}
+```
+随着函数使用场合的不同，this 的值会发生变化。但是有一个总的原则，那就是`this指的是，调用函数的那个对象`。
+### js重定义this指向:call()、apply()、bind()
+
+> 参考: JavaScript 中 call()、apply()、bind() 的用法 http://www.runoob.com/w3cnote/js-call-apply-bind.html
+### call() this的理解 #不清楚
+
+```javascript
+var obj = {};
+obj.log = console.log;
+obj.log.call(console,this);
+```
+```javascript
+  obj.log.call(console,this) 
+= console.log.call(console,this)  
+= console.log(this) //不明白 不清楚。。。
+= console.log(window)
+```
+this这里当然是windows啦。
+
+call()方法,第一个参数和apply()一样,是在其中运行的作用域即this;
+和apply()不同的是,call()方法中的其余的`参数必须直接传给函数`,即在使用call()方法时参数必须逐个的列出来. 
+this 在函数执行时，this 总是指向调用该函数的对象。
+要判断 this 的指向，其实就是判断 this 所在的函数属于谁。 
+在《javaScript语言精粹》这本书中，把 this 出现的场景分为四类，简单的说就是： 
+有对象就指向调用对象 
+没调用对象就指向全局对象 
+用new构造就指向新对象 
+通过 apply 或 call 或 bind 来改变 this 的所指
+console.log(this) //这个this 是传入log的参数，此时this指向window，比如在控制台窗口
+
+### 函数调用模式
+JavaScript 函数有 4 种调用方式，每种方式的不同在于` this 的初始化`。
+>`全局对象` 当函数没有被自身的对象调用时 this 的值就会变成全局对象。在 web 浏览器中全局对象是浏览器窗口`window 对象`。
+
+1. 作为一个函数调用
+函数作为全局对象调用，会使 this 的值成为`全局对象`。
+```javascript
+function myFunction(a, b) {
+    return a * b;
+}
+myFunction(10, 2);           // myFunction(10, 2) 返回 20
+window.myFunction(10, 2);    // window.myFunction(10, 2) 返回 20
+```
+以上函数不属于任何对象，默认属于全局对象。这是调用 JavaScript 函数常用的方法， 但`不是良好的`编程习惯 。全局变量，方法或函数容易造成命名冲突的bug。
+
+2. 函数作为方法调用
+函数作为对象方法调用，会使得 this 的值成为`对象本身`。
+
+```javascript
+var myObject = {
+    firstName:"John",
+    lastName: "Doe",
+    fullName: function () {
+        return this.firstName + " " + this.lastName;
+    }
+}
+myObject.fullName();         // 返回 "John Doe"
+```
+
+```javascript
+var myObject = {
+    firstName:"John",
+    lastName: "Doe",
+    fullName: function () {
+        return this;
+    }
+}
+myObject.fullName();          // 返回 [object Object] (所有者对象)
+```
+
+3. 使用构造函数调用函数
+函数调用前使用了 new 关键字, 则是调用了构造函数。
+构造函数的调用会创建一个新的对象。新对象会继承构造函数的属性和方法。
+
+构造函数中 this 关键字没有任何的值。
+this 的值在函数`调用实例化对象(new object)`时创建。
+```javascript
+// 构造函数:
+function myFunction(arg1, arg2) {
+    this.firstName = arg1;
+    this.lastName  = arg2;
+}
+ 
+// This    creates a new object
+var x = new myFunction("John","Doe");
+x.firstName;                             // 返回 "John"
+```
+
+4. 作为函数方法调用函数
+在 JavaScript 中, `函数是对象`。JavaScript 函数有它的属性和方法。
+
+`call() 和 apply() `是`预定义的函数方法`。 两个方法可用于调用函数，两个方法的第一个参数必须是对象本身。
+
+```javascript
+function myFunction(a, b) {
+    return a * b;
+}
+myObject = myFunction.call(myObject, 10, 2);     // 返回 20
+myArray = [10, 2];
+myObject = myFunction.apply(myObject, myArray);  // 返回 20
+```
+
+在 JavaScript 严格模式(strict mode)下, 在调用函数时`第一个参数会成为 this 的值`， 即使该参数不是一个对象。
+
+在 JavaScript 非严格模式(non-strict mode)下, 如果`第一个参数的值是 null 或 undefined, 它将使用全局对象替代`。
+
+通过 call() 或 apply() 方法你可以设置 this 的值, 且作为已存在对象的新方法调用。
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181206095829562.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FtYXJsaWFubmE=,size_16,color_FFFFFF,t_70)
+
+### 自执行匿名函数
+参考：
+[JS中(function(){xxx})(); 这种写法是什么意思？](https://www.cnblogs.com/beijingstruggle/p/5970824.html)
+[js中(function(){…})()立即执行函数写法理解](https://www.cnblogs.com/chris-oil/p/4862083.html)
+```javascript
+(function () { /* code */ } )();
+(function () { /* code */ } ());
+!function () { /* code */ } ();
+~function () { /* code */ } ();
+-function () { /* code */ } ();
++function () { /* code */ } ();
+```
+
+### 函数的全局与局部理解
+```javascript
+(function() {
+      var a = b = 5; 
+      // b=5; //没有var严格时会报错，本题不考虑；b变成全局变量
+      // var a=b; //a的作用域只在函数内
+  })();   
+//上面代码相当于
+b = 5;
+(function() {
+      var a = b;
+})();   
+console.log(b); // 5
+console.log(a); // Uncaught ReferenceError: a is not defined
+```
+
+### 闭包函数输出结果
+```javascript
+function Foo(){
+     var i=0;
+     return function(){
+         document.write(i++);
+     }
+}
+var f1=Foo(),
+f2=Foo();
+f1(); //0
+f1(); //1
+f2(); //0
+```
+
+> 这是一个闭包，闭包可以用在许多地方。它的最大用处有两个，`一个是前面提到的可以读取函数内部的变量，另一个就是让这些变量的值始终保持在内存中`。 
+这里的局部变量i，对f1()来说是全局变量，对f2()来说也是全局变量，但是f1()的i跟f2()的i又是相互独立相互不可见的，f1()每执行一次，f1()的i就加一，f2（）每次执行一次，f2()的i就加油，但是相互之间不影响，因此结果是010
+-----
+## js浏览器对象模型 (BOM)
+### window 对象——核心 控制窗口、框架和弹出窗口
+
+> 所有浏览器都支持 window 对象。它表示浏览器窗口。
+`所有 JavaScript 全局对象、函数以及变量`均自动成为 window 对象的成员。
+全局变量是 window 对象的属性。
+全局函数是 window 对象的方法。
+甚至 `HTML DOM 的 document `也是 window 对象的属性之一
+
+对于Internet Explorer、Chrome、Firefox、Opera 以及 Safari：
+`window.innerHeight - 浏览器窗口的内部高度(包括滚动条)`
+`window.innerWidth - 浏览器窗口的内部宽度(包括滚动条)`
+对于 Internet Explorer 8、7、6、5：
+`document.documentElement.clientHeight`
+`document.documentElement.clientWidth`
+或者
+`document.body.clientHeight`
+`document.body.clientWidth`
+
+```
+window.open() - 打开新窗口
+window.close() - 关闭当前窗口
+window.moveTo() - 移动当前窗口
+window.resizeTo() - 调整当前窗口的尺寸
+```
+### location 对象中的页面信息 
+```
+location.hostname 返回 web 主机的域名
+location.pathname 返回当前页面的路径和文件名
+location.port 返回 web 主机的端口 （80 或 443）
+location.protocol 返回所使用的 web 协议（http:// 或 https://）
+location.href 属性返回当前页面的 URL
+location.assign() 方法加载新的文档
+```
+### navigator 对象了解浏览器
+来自 navigator 对象的信息具有误导性，不应该被用于检测浏览器版本.
+浏览器检测用以下方法：
+`if (window.opera) {...some action...}`
+```
+浏览器代号: " + navigator.appCodeName + "</p>";
+浏览器名称: " + navigator.appName + "</p>";
+浏览器版本: " + navigator.appVersion + "</p>";
+启用Cookies: " + navigator.cookieEnabled + "</p>";
+硬件平台: " + navigator.platform + "</p>";
+用户代理: " + navigator.userAgent + "</p>";
+用户代理语言: " + navigator.systemLanguage + "</p>";
+```
+### screen 对象
+```
+screen.availWidth - 可用的屏幕宽度
+screen.availHeight - 可用的屏幕高度
+```
+### history对象
+|History  |  对象属性/方法|
+|--|--|
+| length | 返回浏览器历史列表中的 URL 数量。 |
+|back()	|加载 history 列表中的前一个 URL。
+|forward()|	加载 history 列表中的下一个 URL。
+|go(number\|URL)	|加载 history 列表中的某个具体页面。
+-----------
+## DOM
+### IE FE对DOM 对象的支持
+- `innerText` IE支持，FIREFOX不支持
+  Firefox 不支持 DOM 对象的 outerHTML、innerText、outerText 属性
+- `document.createElement` IE支持，FIREFOX支持
+在 IE6 IE7 IE8 中，createElement 方法不仅可以通过合法的标签名创建节点对象，还可以通过传入一段合法的 HTML 代码字符串作为参数创建节点对象。
+- `setAttribute('class'，'styleClass')` IE不支持，FIREFOX支持
+E6 IE7 IE8(Q) 中无法通过 "Element.setAttribute("class", "AttributeValue")" 设置元素的 class 属性，而需要使用 "Element.setAttribute("className", "AttributeValue")"；
+- 用`setAttribute`设置事件。IE支持， FIREFOX支持(其实都可以的，只是形式不同)
+在 IE8(S) Firefox Chrome Safari Opera 中，结果符合规范。而在 IE6 IE7 IE8(Q) 中，无法通过 setAttribute 方法传入一段代码字符串设置一个元素的内联事件，而必须传入一个 function 类型的对象；获取一个已有的内联事件的属性值也是 function 类型，而不是规范中的字符串类型。
+
+### 获取元素
+`document.getElementById()` id是唯一的，Element
+`document.getElementsByTagName()` Tag不一定是唯一，所以是Elements
+等
+
+### 通过js来改变元素样式
+两个最常见的API为：
+`style`: 使用style接口一次只能改变一个样式
+`className`: 使用className则可以同时改变多个样式，当然前提是已经用css定
+
+### 表示红色有若干种方法:
+颜色名：red
+百分数：rgb(100%, 0%, 0%)
+数值：rgb(255, 0, 0)
+十六进制：#FF0000
+简写的十六进制：#F00
+#0000 是不正确的写法，至少要为六位，应该是#FF0000 
+
+----------
+## js事件
+### 事件对象的方法
+`stopPropagation() `阻止事件冒泡。 这个事件不会阻止定义在元素上的其他事件。
+`stopImmediatePropagation() `会彻底的阻止事件， 在其之后的绑定在元素上的其他监听事件都不会触发
+`preventDefault() `阻止事件的默认动作
+
+### 绑定事件处理函数
+> 为每一个指定`元素`的指定`事件（像click）`绑定一个`事件处理器函数`
+> 题目有点不清楚, 感觉用的是jQuery的方法
+> js和jQuery都有bind()方法, 注意区别
+> 
+| jQuery事件处理 |功能  |
+|--|--|
+| on(eve,[sel],[data],fn)1.7+| 在选定的元素上绑定一个或多个事件处理函数。
+| off(eve,[sel],[fn])1.7+| 移除一个事件处理函数。
+| ~~bind(type,[data],fn)3.0-~~ | 为一个元素绑定一个或多个事件处理程序。
+| ~~unbind(t,[d\|f])3.0-~~ | 从元素上删除一个以前附加事件处理程序。
+| one(type,[data],fn)| 为元素的事件添加处理函数。处理函数在每个元素上每种事件类型最多执行一次。
+| trigger(type,[data])| 触发被选元素上指定的事件以及事件的默认行为（比如表单提交）
+| triggerHandler(type, [data])| 与上面类似，triggerHandler() 不触发事件的默认行为
+### js常用事件属性
+|属性|作用  |
+|--|--|
+|onerror|当加载文档或图像时发生某个错误
+|onload	|某个页面或图像被`完成加载 ` |  
+|onchange|	用户改变域的内容
+|onresize	|窗口或框架被调整尺寸
+
+###  alert()框的弹出
+参考：
+[CSS中的行为——expression](http://www.blueidea.com/tech/site/2006/3705.asp)
+```html
+<iframe src=”javascript: alert(1)”></iframe>
+<img src=”” onerror=”alert(1)”/> //onerror事件 当图片不存在时,将触发
+IE下<s style=”top:expression(alert(1))”></s> 
+//尽量少用expression因为在其他浏览器不支持
+//IE5及其以后版本支持在CSS中使用expression，用来把CSS属性和Javascript表达式关联起来。
+//这里的CSS属性可以是元素固有的属性，也可以是自定义属性。
+//就是说CSS属性后面可以是一段Javascript表达式，CSS属性的值等于Javascript表达式`算的结果。
+<div onclick=”alert(1)”></div>
+```
+------------
+## 网络请求问题
+### 异步
+### promise #待看
+### Deferral #待看
+### callback #待看
+待看：
+http://www.alloyteam.com/2014/05/javascript-promise-mode/
+http://www.cnblogs.com/dong-xu/p/7000139.html
+### 跨域问题 
+>- 跨域问题参考：https://blog.csdn.net/lambert310/article/details/51683775
+>`跨域，指的是浏览器不能执行其他网站的脚本。它是由浏览器的同源策略造成的，是浏览器施加的安全限制。同源是指域名，协议，端口均相同`
+>解决方法：
+>1、JSONP：只支持GET，不支持POST
+2、代理：
+3、PHP端修改header（XHR2方式）
+>- 《关于跨域,以及跨域的几种方式》https://www.cnblogs.com/chenshishuo/p/4919224.html #未看完
+
+
+关于跨域问题下面说法正确的是？（）
+A 可以利用flash的http请求，来处理跨域问题 
+
+> ==flash http请求 #不清楚== 
+> 《Http请求详解》 https://www.cnblogs.com/yumo1627129/p/7941220.html  #未看
+
+B 通过iframe设置document.domain可以实现跨域 
+> `iframe 元素会创建包含另外一个文档的内联框架（即行内框架）`
+> `<iframe>一般用来包含别的页面，可以在我们自己的网站页面加载别人网站或者本站其他页面的内容。`
+> 《iframe是什么？iframe用法详解！》https://host.zzidc.com/cjwt/678.html
+> 《Web前端之iframe详解》http://www.cnblogs.com/lvhw/p/7107436.html #未看完
+
+C 一般情况下，m.toutiao.com可以ajax请求www.toutiao.com域名下的接口并获得响应`子域名不同，是跨域` 
+
+> ==ajax #不清楚==
+
+D 通过jsonp方式可以发出post请求其他域名下的接口`错，只支持GET`
+### XML
+> XML 指可扩展标记语言(eXtensible Markup Language)。 XML 被设计用来传输和存储数据。
+
+### ajax 🌟
+参考：[jQuery - AJAX 简介](http://www.w3school.com.cn/jquery/jquery_ajax_intro.asp)
+> AJAX = 异步 JavaScript 和 XML（Asynchronous JavaScript and XML）。
+简短地说，在不重载整个网页的情况下，AJAX 通过后台加载数据，并在网页上进行显示。
+
+> jQuery 提供多个与 AJAX 有关的方法。
+> - 通过 jQuery AJAX 方法，您能够`使用 HTTP Get 和 HTTP Post 从远程服务器上请求文本、HTML、XML 或 JSON` - 同时您能够把这些外部数据直接载入网页的被选元素中。
+> - 提示：如果没有 jQuery，AJAX 编程还是有些难度的。编写常规的 AJAX 代码并不容易，因为不同的浏览器对 AJAX 的实现并不相同。
+#### jQuery ajax() 方法
+`jQuery.ajax([settings])`
+
+`默认情况下，Ajax 请求使用 GET 方法。如果要使用 POST 方法，可以设定 type 参数值。这个选项也会影响 data 选项中的内容如何发送到服务器。`
+
+ajax() 方法通过 HTTP 请求加载远程数据。该方法是 jQuery `底层 AJAX 实现`。
+简单易用的`高层实现见 $.get, $.post `等。
+`$.ajax() `返回其创建的 XMLHttpRequest 对象。大多数情况下你无需直接操作该函数，除非你需要操作不常用的选项，以获得更多的灵活性。
+最简单的情况下，`$.ajax() `可以不带任何参数直接使用。所有的选项都可以通过 `$.ajaxSetup() `函数来全局设置。
+
+#### jQuery load() 方法
+jQuery load() 方法是简单但强大的 AJAX 方法。load() 方法从服务器加载数据，并把返回的数据放入被选元素中。
+
+语法：`$(selector).load(URL,data,callback);`
+必需的 URL 参数规定您希望加载的 URL。
+可选的 data 参数规定与请求一同发送的查询字符串键/值对集合。
+可选的 callback 参数是 load() 方法完成后所执行的函数名称。
+
+#### jQuery get() 和 post() 方法
+`$.get(URL,callback);`
+`$.post(URL,data,callback);`
+> HTTP 请求：GET vs. POST
+两种在客户端和服务器端进行请求-响应的常用方法是：GET 和 POST。
+> - GET - 从指定的资源`请求数据`, GET 基本上用于从服务器获得（取回）数据。注释：GET 方法可能返回缓存数据。
+> - POST - 向指定的资源`提交要处理的数据`，POST `也可用于从服务器获取数据。不过，POST 方法不会缓存数据`，并且常用于连同请求一起发送数据。
+
+### getScript() 方法
+通过 HTTP GET 请求载入并执行 JavaScript 文件。
+`jQuery.getScript(url,success(response,status));`
+
+### Ajax & Flash优缺点比较 #不清楚
+|  |  优势|劣势 |
+|--|--|--|
+| Ajax | 1.可搜索性 2.开放性 3.费用 4.易用性 5.易于开发 | 1.它可能破坏浏览器的后退功能   2.使用动态页面更新使得用户难于将某个特定的状态保存到收藏夹中 ，不过这些都有相关方法解决。|
+|Flash|1.多媒体处理 2.兼容性 3.矢量图形 4.客户端资源调度 |1.二进制格式 2.格式私有 3.flash 文件经常会很大，用户第一次使用的时候需要忍耐较长的等待时间  4.性能问题 |
+
+### 可缓存
+
+如果要对响应进行缓存，需要满足以下条件：
+
+- 请求报文的 HTTP 方法本身是可缓存的，包括 GET 和 HEAD，但是 PUT 和 DELETE 不可缓存，POST 在多数情况下不可缓存的。
+- 响应报文的状态码是可缓存的，包括：200, 203, 204, 206, 300, 301, 404, 405, 410, 414, and 501。
+- 响应报文的 Cache-Control 首部字段没有指定不进行缓存。
+
+### XMLHttpRequest
+
+为了阐述 POST 和 GET 的另一个区别，需要先了解 XMLHttpRequest：
+
+> XMLHttpRequest 是一个 API，它为客户端提供了在客户端和服务器之间传输数据的功能。它提供了一个通过 URL 来获取数据的简单方式，并且不会使整个页面刷新。这使得网页只更新一部分页面而不会打扰到用户。XMLHttpRequest 在 AJAX 中被大量使用。
+
+- 在使用 XMLHttpRequest 的 POST 方法时，浏览器会先发送 Header 再发送 Data。但并不是所有浏览器会这么做，例如火狐就不会。
+- 而 GET 方法 Header 和 Data 会一起发送。
+
+---------
+## js代码书写规范
+### javascript 模块化
+参考链接：
+http://www.ruanyifeng.com/blog/2012/10/asynchronous_module_definition.html
+《详解JavaScript模块化开发》https://segmentfault.com/a/1190000000733959#articleHeader8
+
+> `CommonJS`是服务器端模块的规范，`Node.js`采用了这个规范。
+> 根据CommonJS规范，一个单独的文件就是一个模块。每一个模块都是一个单独的作用域，也就是说，在该模块内部定义的变量，无法被其他模块读取，除非定义为global对象的属性。
+输出模块变量的最好方法是使用`module.exports = function () { }`，加载模块使用`require`方法。
+ 
+> `AMD(Asynchronous Module Definition)"异步模块定义"`，浏览器端模块化开发的规范。采用异步方式加载模块，模块的加载不影响它后面语句的运行。所有依赖这个模块的语句，都定义在一个回调函数中，等到加载完成之后，这个回调函数才会运行。
+> AMD也采用`require()语句加载模块`，但是不同于`CommonJS`。
+> 目前，实现`AMD`的库有`RequireJS 、curl 、Dojo 、Nodules `等
+> 
+```javascript
+define(id?, dependencies?, factory);
+// 创建一个名为"alpha"的模块，使用了require，exports，和名为"beta"的模块:
+define("alpha", ["require", "exports", "beta"], function (require, exports, beta) {
+       exports.verb = function() {
+           return beta.verb();
+           //Or:
+           return require("beta").verb();
+       }
+   });
+   ```
+> `CMD（Common Module Definition） 通用模块定义`。在 CMD 规范中，一个模块就是一个文件。
+```javascript
+//默认会传入三个参数：require、exports 和 module：
+define(function(require, exports, module) {
+  // 模块代码
+});
+```
+| |AMD|CMD  |
+|--|--|--|
+|对模块的依赖|`提前执行`（异步加载：依赖先执行）+延迟执行|`延迟执行`（运行到需加载，根据顺序执行）|
+|推崇(eg见下面代码)|`依赖前置`|`依赖就近`，按需加载|
+| | API根据使用范围有区别，但使用同一个api接口|每个API的职责单一
+|在推广过程中对模块定义的规范化产出 |`RequireJS `|`SeaJS`|
+|对模块的态度 |预执行 |懒执行 |
+
+```javascript
+//CMD 推崇依赖就近，AMD 推崇依赖前置
+// CMD
+define(function(require, exports, module) {
+var a = require('./a')
+a.doSomething()
+// 此处略去 100 行
+var b = require('./b') // 依赖可以就近书写
+b.doSomething()
+// ... 
+})
+
+// AMD 默认推荐的是
+define(['./a', './b'], function(a, b) { // 依赖必须一开始就写好
+a.doSomething()
+// 此处略去 100 行
+b.doSomething()
+...
+}) 
+```
+### 开发函数重名
+
+> 用`seajs这类包管理工具`解决命名冲突很常见啊，全都`封装在匿名函数`中就解决了
+>每个开发人员都把自己的函数封装到类中，然后调用的时候即使函数名相同，但是因为是要类.函数名来调用，所以也减少了重复的可能性。
+
+----------
+## 其他
+### 枚举
+在原型上扩展的可枚举方法，会被for in循环出来 #不清楚
+### for和for in的输出顺序 #不清楚
+For循环是按顺序的，for in 循环是不一定按顺序的
+### object 和 Object的区别
+- 使用Object.defineProperty可向对象添加或者修改属性
+不存在 object 这个对象，所以会提示你 object is not defined 。
+而 Object 是 JavaScript 中一个重要的对象，其它对象都是基于它的，包括你创建的函数。
+### 原型
+- 每个对象都有prototype属性，返回对象类型原型的引用❌
+```
+var obj = Object.create(null)
+console.log(obj)
+```
+如果使用 chrome 浏览器控制台输入上面代码，可以看到打印了一个空对象，展开看到No Properties，而随便自己用字面量声明一个对象，都能看到proto属性。
+所以，不是每个对象都有prototype属性。后面这句，严格来说是不是每个对象都会返回Object.prototype？，但实际应该是这个对象的原型的引用，加个“类型”是什么意思，所以这个选项考点到底是第一句话还是第二句话？
+- 通过hasOwnProperty可判断一个对象以及其原型链上是否具有指定名称的属性 ❌
+`hasOwnProperty(..) 只会检查属性是否在myObject 对象中，不会检查[[Prototype]] 链。`
+
+- 原型链是JS实现继承的一种模型
+
+### 表单\<select>对象的属性:options selectedIndex text value 
+```html
+如何获取下面表单select域的选择部分的文本？()
+<form name="a">
+	<select name="a" size="1" id="obj">
+		<option value="a">1</option>
+		<option value="b">2</option>
+		<option value="c">3</option>
+	</select>
+</form> 
+```
+```javascript
+解析:
+window.onload = function(){ 
+	//首先获得下拉框的节点对象； 
+	var obj = document.getElementById("obj"); 
+	//1.如何获得当前选中的值？： 
+	var value = obj.value; 
+	//2.如何获得该下拉框所有的option的节点对象 
+	var options = obj.options; //注意：得到的options是一个对象数组 
+	//3.如何获得第几个option的value值?比如我要获取第一option的value,可以这样： 
+	var value1 =options[0].value; 
+	//4.如何获得第几个option的文本内容?比如我要获取第一option的文本,可以这样： 
+	var text1 = options[0].text; 
+	//5.如何获得当前选中的option的索引？ 
+	var index = obj.selectedIndex; 
+	//6.如何获得当前选中的option的文本内容？ 
+	//从第2个问题，我们已经获得所有的option的对象数组options了 
+	//又从第5个问题，我们获取到了当前选中的option的索引值 
+	//所以我们只要同options[index]下标的方法得到当前选中的option了 
+	var selectedText =options[index].text; 
+}
+```
+### 网页添加js的方法
+ 1. 使用script标签 
+ 2. 加外部javascript文件  
+ 3. 行内js`javascript:return void(null)或javascript:return confirm("……");`
+### js单线程操作
+因为JS运行在浏览器中，是`单线程`的，`每个window一个JS线程`，既然是单线程的，在某个特定的时刻只有特定的代码能够被执行，并阻塞其它的代码。
+而浏览器是事件驱动的（Event driven），浏览器中很多行为是异步（Asynchronized）的，会创建事件并放入执行队列中。
+javascript引擎是单线程处理它的任务队列，你可以理解成就是普通函数和回调函数构成的队列。当异步事件发生时，如mouse click, a timer firing, or an XMLHttpRequest completing（鼠标点击事件发生、定时器触发事件发生、XMLHttpRequest完成回调触发等），将他们`放入执行队列，等待当前代码执行完成`。
+
+### 解释性语言&编译性语言
+|  | 定义 |特点|
+|--|--|--|
+| 解释性语言 | 不需要编译，每个语句都是执行的时候才翻译。每执行一次`逐行翻译`一次，效率比较低。现代解释性语言通常把源程序编译成`中间代码`，然后用解释器把中间代码一条条翻译成目标机器代码，一条条执行。 | `非独立`：JavaScript语言依赖执行环境，对于客户端来说是浏览器，对于服务端来说是node。`效率低`|
+|编译性语言|在被执行之前，需要一个专门的编译过程，把程序编译成为机器语言的文件，比如exe文件，以后要运行的话就不用重新翻译了，直接使用编译的结果就行了（exe文件）|`效率高`
+---------------
+## Angular
+### angularjs1中使用指令，绑定监听是在什么时候？link #不清楚
+### angularjs1中的$apply()的作用是？#不清楚
+使方法生效。（好像答案不太准确）
+$apply()方法可以在angular框架之外执行angular JS的表达式，例如：DOM事件、setTimeout、XHR或其他第三方的库。
+
+### filter的两种使用方法
+1. 在模板中使用filter
+我们可以直接在{{}}中使用filter，跟在表达式后面用 | 分割，语法如下：
+`{{ expression | filter }}`
+也可以多个filter连用，上一个filter的输出将作为下一个filter的输入
+`{{ expression | filter1 | filter2 | ... }}`
+filter可以接收参数，参数用 : 进行分割，如下：
+`{{ expression | filter:argument1:argument2:... }}`
+除了对{{}}中的数据进行格式化，我们还可以在指令中使用filter，例如先对数组array进行过滤处理，然后再循环输出：
+`<span ng-repeat="a in array | filter ">`
+
+2. 在controller和service中使用filter #不清楚
+我们的js代码中也可以使用过滤器，方式就是我们熟悉的依赖注入，例如我要在controller中使用currency过滤器，只需将它注入到该controller中即可，代码如下：
+```
+app.controller('testC',function($scope,currencyFilter){
+    $scope.num = currencyFilter(123534);  
+}
+```
+在模板中使用{{num}}就可以直接输出 $123,534.00了！在服务中使用filter也是同样的道理。
+
+ng提供了一个`$filter`服务可以来调用所需的filter，你只需注入一个`$filter`就够了，使用方法如下：
+```
+app.controller('testC',function($scope,$filter){
+    $scope.num = $filter('currency')(123534);
+$scope.date = $filter('date')(new Date());  
+}
+```
+### compile在生成DOM后扫描并生成
+为了解决AngularJS性能问题，编译阶段应分为两个阶段
+1. compile (绑定DOM)   
+2. link（数据绑定）
+
+
+- angularJS肯定是在DOM节点树生成后开始管理节点的
+- 生成后寻找ng-app标记，然后其下属所有节点均由ng来管理
+- 使用compile可以改变原始的dom,在ng创建原始dom实例以及创建scope实例之前. 
+- ng-repeat就是一个最好的例子,它就在是compile函数阶段改变原始的dom生成多个原始dom节点,然后每个又生成element实例.
+
+### angularjs1中定义服务的方法
+factory
+service
+provider 自定义服务
+
+----------
+# 二、计算机网络基础 
+##  http #不清楚
+### GET 和 POST
+|  |  相同点|GET|POST|
+|--|--|--|--|
+|作用  |  |获取资源 |传输实体主体 |
+|参数| 都能使用额外的参数|以查询字符串出现在 URL 中|存储在实体主体中|
+|安全| |安全，还有：HEAD、OPTIONS|不安全，传送实体主体内容，这个内容可能是用户上传的表单数据，上传成功之后，服务器可能把这个数据存储到数据库中，因此状态也就发生了改变。还有 PUT、DELETE。|
+|幂等性|幂等的 HTTP 方法，同样的请求被执行一次与连续执行多次的效果是一样的，服务器的状态也是一样的。|GET，HEAD，PUT 和 DELETE|POST|
+|可缓存| | 可缓存| 多数情况下不可缓存|
+|XMLHttpRequest | |Header 和 Data 会一起发送|大多数情况会先发送 Header，再发送 Data
+
+GET和POST的区别： 　　
+1.GET请求的数据会附在URL之后（就是把数据放置在HTTP协议头中），以?分割URL和传输数据，参数之间以&amp;amp;amp;相连，如：login.action?name=hyddd&amp;amp;amp;password=idontknow&amp;amp;amp;verify=%E4%BD%A0%E5%A5%BD。如果数据是英文字母/数字，原样发送，如果是空格，转换为+，如果是中文/其他字符，则直接把字符串用BASE64加密，得出如：%E4%BD%A0%E5%A5%BD，其中％XX中的XX为该符号以16进制表示的ASCII。 　　POST把提交的数据则放置在是HTTP包的包体中。 
+2.GET方式提交的数据最多只能是1024字节，理论上POST没有限制，可传较大量的数据，IIS4中最大为80KB，IIS5中为100KB&
+3.在ASP中，服务端获取GET请求参数用Request.QueryString，获取POST请求参数用Request.Form。在JSP中，用request.getParameter(\&amp;amp;quot;XXXX\&amp;amp;quot;)来获取，虽然jsp中也有request.getQueryString()方法，但使用起来比较麻烦，比如：传一个test.jsp?name=hyddd&amp;amp;amp;password=hyddd，用request.getQueryString()得到的是：name=hyddd&amp;amp;amp;password=hyddd。在PHP中，可以用`$_GET和$_POST`分别获取GET和POST中的数据，而`$_REQUEST`则可以获取GET和POST两种请求中的数据。值得注意的是，JSP中使用request和PHP中使用`$_REQUEST`都会有隐患，这个下次再写个文章总结。 
+4.POST的安全性要比GET的安全性高。注意：这里所说的安全性和上面GET提到的“安全”不是同个概念。上面“安全”的含义仅仅是不作数据修改，而这里安全的含义是真正的Security的含义，比如：通过GET提交数据，用户名和密码将明文出现在URL上，因为(1)登录页面有可能被浏览器缓存，(2)其他人查看浏览器的历史纪录，那么别人就可以拿到你的账号和密码了，除此之外，使用GET提交数据还可能会造成Cross-site request forgery攻击。
+
+--------
+## 其他
+### TCP三次握手和四次挥手
+[TCP三次握手和四次挥手以及11种状态](http://blog.51cto.com/jinlong/2065461)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181207214247206.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FtYXJsaWFubmE=,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181207214313273.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FtYXJsaWFubmE=,size_16,color_FFFFFF,t_70)
+
+### DNS
+A：DNS支持`从域名到地址`的映射和`从地址到域名`的映射，DNS的确是有反向解析的，这是一个`PTR.查询`
+B：主要用`UDP`，但是当请求字节过长超过512字节时用TCP协议，将其分割成多个片段传输。
+C：DNS协议默认端口号是`53`。
+D：操作系统的DNS缓存：windows DNS缓存的默认值是 MaxCacheTTL，它的默认值是86400s，也就是`一天`。macOS 严格遵循DNS协议中的TTL。
+浏览器的DNS缓存：chrome对每个域名会默认缓存`60s`；IE将DNS缓存`30min`；Firefox默认缓存时间只有`1分钟`；Safari约为`10S`。
+
+### 从用户输入浏览器输入url到页面最后呈现
+一道很常规的题目，考的是基本网络原理，和浏览器加载css，js过程。
+
+ 1. 用户输入URL地址
+
+ 2. 浏览器`解析URL`解析出`主机名`
+    
+ 3. 浏览器将`主机名`转换成`服务器ip地址`（浏览器先查找本地`DNS`缓存列表 没有的话 再向浏览器默认的DNS服务器发送查询请求 同时缓存）
+    
+4. 浏览器将`端口号`从URL中解析出来
+
+5. 浏览器建立一条与目标Web`服务器`的`TCP连接（三次握手）`
+
+6. 浏览器向服务器发送一条`HTTP请求`报文
+
+7. 服务器向浏览器返回一条`HTTP响应`报文
+
+8. 关闭连接浏览器`解析文档`
+
+如果文档中有资源 重复6 7 8 动作 直至资源全部加载完毕
+## 计算机基础
+### 编码
+参考：
+[计算机字符编码详尽讲解](https://www.cnblogs.com/kex1n/p/4138427.html)
+[计算机编码总结](http://www.cnblogs.com/jessonluo/p/4800331.html)
+[计算机字符编码详解——从理论到实践](https://blog.csdn.net/xuejianhui/article/details/52650825)
+1. 第一阶段 ASCII
+
+> 最基本的编码，它定义了0～127对应的字符，包括最基本的英文字母、标点符号。它无法表示中文
+
+2. 第二阶段 GB2312,GBK, BIG5 Latin1, ISO-8859-1, JIS, ANSI...
+
+> - GB系列编码定义了中文汉字、标点的编码。
+> - 日文、韩文、世界各国文字都有了它们各自的编码（如果ASCII不能满足使用要求的话）。这些编码都和GB编码相似，兼容ASCII并用两个字节表示一个字。所有这些各国文字编码，微软统称为ANSI 
+
+3. 第三阶段 Unicode / UTF / UCS
+
+> - Unicode虽是一种字符编码，但严格来说它和GB18030不能相提并论：它只定义了每一个字符对应一个整数（目前包含了十万多个字符，其中0～127和ASCII完全一样）
+> - 根据`整数如何变成字节`“Unicode转换格式”（Unicode Transformation Format，简称为UTF）方式分为：UTF-8、UTF-8 with BOM、UTF-8 without BOM、UTF-16、UTF-16LE、UTF-16BE…… 还有很少见的UTF-32、，早期还会听说过UCS-2、UCS-4…… _(:з」∠)_
+> - UTF-8：它将`一个字符编为1-4个字节`，其中一个字节的字符和ASCII 完全一致，所以它也向下兼容ASCII。
+
+
+------------
+# 三、html css
+## html
+### 元信息标签meta
+参考：[HTML中meta标签作用及属性总结](https://www.cnblogs.com/jesse131/p/5334311.html)
+[前端-移动端h5常用属性](https://blog.csdn.net/Small_Dark/article/details/72420948)
+提供有关页面的元信息（meta-information），搜索引擎优化（SEO），定义页面使用语言，自动刷新并指向新的页面，实现网页转换时的动态效果，控制页面缓冲，网页定级评价，控制网页显示的窗口等！
+
+`<meta> `标签位于文档的头部，不包含任何内容。
+`<meta> `标签的属性定义了与文档相关联的`名称/值对`。
+
+1. content 属性
+提供了名称/值对中的值。该值可以是任何有效的字符串。content 属性始终要和 name 属性或 http-equiv 属性一起使用。提供了名称/值对中的值。该值可以是任何有效的字符串。content 属性始终要和 name 属性或 http-equiv 属性一起使用。
+2. http-equiv属性
+相当于http的文件头作用，它可以向浏览器传回一些有用的信息，以帮助正确和精确地显示网页内容，与之对应的属性值为content，content中的内容其实就是各个参数的变量值。
+http-equiv属性主要有以下几种参数：
+A、Expires(期限)
+B、Pragma(cache模式)
+C、Refresh(刷新)
+D、Set-Cookie(cookie设定)
+E、Window-target(显示窗口的设定)
+F、content-Type(显示字符集的设定)
+G、content-Language（显示语言的设定）
+H、Cache-Control指定请求和响应遵循的缓存机制。
+J、http-equiv="imagetoolbar"
+
+3. name属性
+name属性主要用于描述网页
+author
+description
+keywords
+generator
+revised
+others
+‘viewport’ 设置显示方式，一般适配移动设备用来避免缩放和影响体验的滚动条 
+```
+ width - viewport的宽度 height - viewport的高度
+initial-scale - 初始的缩放比例
+minimum-scale - 允许用户缩放到的最小比例
+maximum-scale - 允许用户缩放到的最大比例
+user-scalable - 用户是否可以手动缩放
+```
+1) `<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" />   `
+ //强制让文档的宽度与设备的宽度保持1:1，   
+ //文档初始化缩放比例是1:1，   
+ //不允许用户点击屏幕放大浏览，    
+//允许用户缩放到的最大比例，   
+ //尤其要注意的是content里多个属性的设置一定要用;+空格来隔开，如果不规范将不会起作用。
+ 其他属性有：
+ 
+2) `<meta name="apple-mobile-web-app-capable" content="yes" />   ` 
+
+ //iPhone私有标签，它表示：允许全屏模式浏览
+
+3) `<meta name="apple-mobile-web-app-status-bar-style" content="black" />    `
+
+//iPhone私有标签，它指定的iPhone中safari顶端的状态条的样式
+
+4) `<meta name="format-detection" content="telephone=no; email=no" />    //不识别邮件和不把数字识别为电话号码`
+
+### html Doctype
+参考：[关于HTML文档的文档模式](https://www.cnblogs.com/erin/p/7831594.html)
+- 它的责任就是告诉浏览器文档使用哪种html或者xhtml规范
+- ==不同文档模式主要影响CSS内容的呈现，尤其是浏览器对盒模型的解析==
+
+> HTML文档的文档模式包括`混杂模式和标准模式`，这两种模式主要影响CSS内容的呈现，但在某些情况下也会影响到JavaScript的解释执行。
+
+- ==不同浏览器在`混杂模式`下的行为差异非常大，如果不使用某些`hack技术`，跨浏览器的行为根本就没有一致性可言。==
+
+- 如果在文档开始处没有发现文档类型声明，则所有浏览器都会默认开启`混杂模式`
+
+### HTML文档中的图像格式
+网页html文档支持的图片格式有`jpg     ,    gif   ,    png   和   bmp   `这四种
+`jpg  gif   png `格式的图片特点是体积很小，常见
+`bmp`占内存很大，所以很少见，但是也是支持的
+`tif` 不支持
+### 字符编码集
+- `UTF-8`（8-bit Unicode Transformation Format）是一种针对Unicode的可变长度字符编码，又称`万国码`。UTF-8用1到6个字节编码UNICODE字符。用在网页上可以同一页面显示中文简体繁体及其它语言（如英文，日文，韩文）。
+- `GBK是汉字编码`	，是双字节码，可表示繁体字和简体字。
+- `ISO8859-2 字符集`，也称为 Latin-2，收集了`东欧`字符。
+### 二进制大对象Blob
+HTML5中的Blob二进制大对象
+1、 Blob 是什么？
+在计算机中，BLOB常常是数据库中用来存储 二进制文件 的字段类型。
+这里说的是一种 JavaScript 的对象类型。
+MYSQL中的BLOB类型就只是个二进制数据容器。而HTML5中的Blob对象除了存放二进制数据外还可以设置这个数据的MIME类型，这相当于对文件的储存。
+一个Blob对象就是一个包含有只读原始数据的类文件对象。
+2、 创建Blob 对象
+在新的方法中直接可以通过 Blob() 的构造函数来创建了。
+构造函数，接受两个参数：
+第一个为一个数据序列，可以是任意格式的值，例如，任意数量的字符串，Blobs 以及 ArrayBuffers。
+第二个参数，是一个包含了两个属性的对象，其两个属性分别是：
+（1）type -- MIME 的类型。
+（2）endings -- 决定 append() 的数据格式，
+```
+<script>
+var blob = new Blob([ "Hello World!" ],{type: "text/plain" });
+</script>
+```
+
+## 标签相关
+###  HTML5 新标签
+参考：[HTML5新增的标签和属性归纳](https://blog.csdn.net/garvisjack/article/details/54754928)
+1、结构标签
+（1）section：独立内容区块，可以用h1~h6组成大纲，表示文档结构，也可以有章节、页眉、页脚或页眉的其他部分；
+（2）`article`：特殊独立区块，表示这篇页眉中的核心内容；
+（3）aside：标签内容之外与标签内容相关的辅助信息；
+（4）header：某个区块的头部信息/标题；
+（5）hgroup：头部信息/标题的补充内容；
+（6）footer：底部信息；
+（7）`nav`：导航条部分信息
+（8）figure：独立的单元，例如某个有图片与内容的新闻块。
+
+2、表单标签
+（1）email：必须输入邮件；
+（2）url：必须输入url地址；
+（3）number：必须输入数值；
+（4）range：必须输入一定范围内的数值；
+（5）Date Pickers：日期选择器；
+a.date：选取日、月、年
+b.month：选取月、年
+c.week：选取周和年
+d.time：选取时间（小时和分钟）
+e.datetime：选取时间、日、月、年（UTC时间）
+f.datetime-local：选取时间、日、月、年（本地时间）
+（6）search：搜索常规的文本域；
+（7）color：颜色
+
+3、媒体标签
+（1）`video`：视频
+（2）`audio`：音频
+（3）embed：嵌入内容（包括各种媒体），Midi、Wav、AU、MP3、Flash、AIFF等。
+
+4、其他功能标签
+（1）mark：标注（像荧光笔做笔记）
+（2）progress：进度条；<progress max="最大进度条的值" value="当前进度条的值">
+（3）time：数据标签，给搜索引擎使用；发布日期<time datetime="2014-12-25T09:00">9：00</time>更新日期<time datetime="2015- 01-23T04:00" pubdate>4:00</time>
+（4）ruby和rt：对某一个字进行注释；<ruby><rt>注释内容</rt><rp>浏览器不支持时如何显示</rp></ruby>
+（5）wbr：软换行，页面宽度到需要换行时换行；
+（6）canvas：使用JS代码做内容进行图像绘制；
+（7）command：按钮；
+（8）deteils ：展开菜单；
+（9）dateilst：文本域下拉提示；
+（10）keygen:加密；
+
+### html自闭合标签
+自闭合标签有`<img/><br/><input/><hr/><link/>`等
+### 常用标签
+>` SVG` 文件可通过以下标签嵌入 HTML 文档：`<embed>、<object> 或者 <iframe>`。
+> `<address> `标签定义文档或文章的作者/拥有者的联系信息。
+>`<fieldset>`定义围绕表单中元素的边框。 HTML5 拥有如下属性：disabled、form、name，HTML 4.01 中不支持这些属性。
+>`<legend>`定义 fieldset 元素的标题。
+>`<pre>`	定义预格式文本。被包围在 `<pre> `标签 元素中的文本通常会保留空格和换行符。而文本也会呈现为等宽字体。`一个常见应用就是用来表示计算机的源代码。`
+### pre标签
+
+>` <pre>`标签的定义及使用说明：
+> 1、该标签可定义预格式化的文本，被包围在 pre 元素中的文本通常会保留空格和换行符，并且文本会呈现为等宽字体。该标签的一个常见应用就是用来表示计算机的源代码。
+> 2、该元素中允许的文本可以包括物理样式和基于内容的样式变化，还有链接、图像和水平分隔线。当把其他标签（比如` <a> `标签）放到 `<pre> `块中时，就像放在 HTML/XHTML 文档的其他部分中一样即可。
+> 3、标签中的特殊符号被转换为符号实体，比如` "&lt;" 代表 "<"，"&gt;" 代表 ">"`。
+> 4、可以导致段落断开的标签（比如 `<h1>、<p> 和 <address> ` 标签）尽量不要包含在` <pre> `所定义的块里，我试过现在的浏览器（Google、IE和火狐），虽然可以把段落结束标签解释为简单地换行，但是在代码编辑器里会报错 "Invalid location of tag (h1)."
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181204233606179.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FtYXJsaWFubmE=,size_16,color_FFFFFF,t_70)
+
+### 字符实体
+
+### meta 标签
+`<meta>` 元素可提供有关页面的元信息（meta-information），比如针对搜索引擎和更新频度的描述和关键词。
+`<meta> `标签位于文档的头部，不包含任何内容。
+`<meta>` 标签的属性定义了与文档相关联的名称/值对。
+### mark标签
+`<mark>` 标签定义带有记号的文本。请在需要突出显示文本时使用 <m> 标签。
+eg:<mark>milk</mark>   
+### small标签
+`<small>`标签呈现小号字体效果。
+
+```
+<mark> 标签定义带有记号的文本。请在需要突出显示文本时使用 <m> 标签。 
+<em> 把文本定义为强调的内容。
+<strong> 把文本定义为语气更强的强调的内容。
+<dfn> 定义一个定义项目。 
+<code> 定义计算机代码文本。 
+<samp> 定义样本文本。 
+<kbd> 定义键盘文本。它表示文本是从键盘上键入的。它经常用在与计算机相关的文档或手册中。
+<var> 定义变量。您可以将此标签与 <pre> 及 <code> 标签配合使用。 
+<cite> 定义引用。可使用该标签对参考文献的引用进行定义，比如书籍或杂志的标题。 
+<HR> ：表示一条横线    
+<BR> :可插入一个简单的换行符  
+<TR>产生一个表行
+```
+### link标签
+定义和用法
+`<link>` 标签定义文档与外部资源的关系。
+`<link>` 标签最常见的用途是链接样式表。
+
+提示和注释：
+注释：link 元素是空元素，它仅包含属性。
+注释：此元素只能存在于 head 部分，不过它可出现任何次数。
+
+```
+<head>
+<link rel="stylesheet" type="text/css" href="theme.css" />
+</head>
+```
+
+### img标签
+<img> 标签有两个必需的属性：src 属性 和 alt 属性（规定图像的替代文本）。
+### 
+`<mark>`<mark>用于显示变粗的文字</mark>
+`<del>`<del>用于显示删除的文本</del>
+`<ins>`<ins>的文字会带下划线</ins>
+`<strong>`<strong>用于强调文本</strong>
+
+----
+## css
+### css3新增属性
+1、box-shadow（阴影效果）
+9、box-sizing（控制盒模型的组成模式）
+
+2、border-color（为边框设置多种颜色）
+3、border-image（图片边框）
+4、border-radius（圆角边框）
+11、outline（外边框）
+
+5、text-shadow（文本阴影）
+6、text-overflow（文本截断）
+
+7、word-wrap（自动换行）
+8、opacity（透明度）
+10、resize（元素缩放）
+
+12、background-size（指定背景图片尺寸）
+13、background-origin（指定背景图片从哪里开始显示）
+14、background-clip（指定背景图片从什么位置开始裁剪）
+15、background（为一个元素指定多个背景）
+
+16、hsl（通过色调、饱和度、亮度来指定颜色颜色值）
+17、hsla（在hsl的基础上增加透明度设置）
+18、rgba（基于rgb设置颜色，a设置透明度）
+### CSS hack
+参考：[史上最全的CSS hack方式一览（解决IE6-IE11,Firefox/Safari/Opera/Chrome兼容问题）](https://blog.csdn.net/dayu9216/article/details/70225261)
+由于不同厂商的流览器或某浏览器的不同版本（如IE6-IE11,Firefox/Safari/Opera/Chrome等），对CSS的支持、解析不一样，导致在不同浏览器的环境中呈现出不一致的页面展现效果。为了获得统一的页面效果，就需要`针对不同的浏览器/不同版本写相应的CSS code的过程，叫做CSS hack`!
+
+- CSS hack的原理
+由于`不同的浏览器和浏览器各版本`对`CSS的支持及解析结果`不一样，以及`CSS优先级`对浏览器展现效果的影响，我们可以据此针对不同的浏览器情景来应用不同的CSS。
+
+- CSS hack分类
+CSS Hack大致有3种表现形式，`CSS属性前缀法、选择器前缀法以及IE条件注释法（即HTML头部引用if IE）Hack`，实际项目中CSS Hack大部分是针对IE浏览器不同版本之间的表现差异而引入的。
+
+`1. 属性前缀法(即类内部Hack)`：属性前缀法是在CSS样式属性名前加上一些只有特定浏览器才能识别的hack前缀，以达到预期的页面展现效果。例如 IE6能识别下划线"_"和星号" * "，IE7能识别星号" * "，但不能识别下划线"_"，IE6~IE10都认识"\9"，但firefox前述三个都不能认识。
+
+`2. 选择器前缀法(即选择器Hack)`：选择器前缀法是针对一些页面表现不一致或者需要特殊对待的浏览器，在CSS选择器前加上一些只有某些特定浏览器才能识别的前缀进行hack。例如 IE6能识别*html .class{}，IE7能识别*+html .class{}或者*:first-child+html .class{}。
+
+`3. IE条件注释法(即HTML条件注释Hack)`：IE浏览器专有的Hack方式　
+```
+只在IE下生效
+<!--[if IE]>
+这段文字只在IE浏览器显示
+<![endif]-->
+
+只在IE6下生效
+<!--[if IE 6]>
+这段文字只在IE6浏览器显示
+<![endif]-->
+```
+
+　
+CSS hack书写顺序，一般是将适用范围广、被识别能力强的CSS定义在前面。
+
+### css3边框在各浏览器的支持性
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181203101235404.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FtYXJsaWFubmE=,size_16,color_FFFFFF,t_70)
+> Internet Explorer 9+ 支持 border-radius 和 box-shadow 属性。
+Firefox、Chrome 以及 Safari 支持所有新的边框属性。
+注释：对于 border-image，Safari 5 以及更老的版本需要前缀 -webkit-。
+Opera 支持 border-radius 和 box-shadow 属性，但是于 border-image 需要前缀 -o-。
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181203101259337.png)
+### css定位属性
+#### overflow	规定当内容溢出元素框时发生的事情
+
+| 参数 |描述  |
+|--|--|
+|visible	|默认值。内容不会被修剪，溢出的内容出现在父元素之外。
+|hidden	|内容会被修剪，溢出隐藏。
+|scroll	|内容会被修剪，必会出现滚动条
+|auto	|如果内容被修剪，子元素内容大于父元素时出现滚动条。
+|inherit	|规定应该从父元素继承 overflow 属性的值。
+
+
+### 盒子模型
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181203101631429.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FtYXJsaWFubmE=,size_16,color_FFFFFF,t_70)
+
+> 标准盒子模型 ＝ margin + border + padding + content （content =  width | height）
+IE盒子模型 ＝ margin + content （content = border + padding + width | height）
+
+### 块状元素、内联元和内联块状元素
+在CSS中，html中的标签元素大体被分为三种不同的类型： 块状元素、内联元素(又叫行内元素)和内联块状元素。 
+
+**常用的块状元素有：**
+ `<div>、<p>、<h1>…<h6>、<ol>、<ul>、<dl>、<table>、<address>、<blockquote> 、<form>`
+ 什么是块级元素？ 
+在html中`<div>、<p>、<h1>、<form>、<ul>和<li>`就是块级元素。设置`display:block`就是将元素显示为块级元素。 
+块级元素特点：
+ 1、每个块级元素都从新的一行开始，并且其后的元素也另起一行。（真霸道，一个块级元素独占一行）;
+ 2、元素的高度、宽度、行高以及顶和底边距都可设置。
+ 3、元素宽度在不设置的情况下，是它本身父容器的100%（和父元素的宽度一致），除非设定一个宽度。 
+
+**常用的内联元素有：** 
+`<a>、<span>、<br>、<i>、<em>、<strong>、<label>、<q>、<var>、<cite>、<code> `在html中，`<span>、<a>、<label>、<strong> 和<em>`就是典型的内联元素（行内元素）（inline）元素。
+当然块状元素也可以通过代码`display:inline`将元素设置为内联元素。 
+内联元素特点： 
+1、和其他元素都在一行上； 
+2、`元素的高度、宽度及顶部和底部边距不可设置；`
+3、`元素的宽度就是它包含的文字或图片的宽度，不可改变。` 
+
+**常用的内联块状元素有**：
+` <img>、<input>`
+内联块状元素（inline-block）就是同时具备内联元素、块状元素的特点，代码`display:inline-block`就是将元素设置为内联块状元素。
+inline-block 元素特点： 
+1、和其他元素都在一行上； 
+2、`元素的高度、宽度、行高以及顶和底边距都可设置`。
+
+---------
+### css上下文 #待看
+[理解 CSS 布局和块级格式上下文](https://www.cnblogs.com/wwhhq/p/8111546.html)
+
+### css样式等级
+ 第一等：代表`内联样式`，如: style=””，权值为1000。 
+ 第二等：代表`ID选择器`，如：#content，权值为100。 
+ 第三等：代表`类，伪类和属性选择器`，如.content，权值为10。 
+ 第四等：代表`类型选择器和伪元素选择器`，如div p，权值为1。
+ 
+### css 中可继承的属性
+继承就是指子节点默认使用父节点的样式属性：`颜色，文字，字体间距行高对齐方式，和列表的样式`
+- 所有元素可继承：visibility和cursor。
+- 内联元素可继承：letter-spacing、word-spacing、white-space、line-height、color、font、font-family、font-size、font-style、font-variant、font-weight、text-decoration、text-transform、direction。
+- 终端块状元素可继承：text-indent和text-align。
+- 列表元素可继承：list-style、list-style-type、list-style-position、list-style-image。
+### 长度单位em pt px
+em 是一个相对的长度单位，指相对于当前字体的倍数
+pt 是一个物理的绝对长度单位，points (1pt = 1/72 of 1in)
+px 也是一个物理的绝对长度单位， pixels (1px = 1/96th of 1in)
+### span标签的width和height，float，absolute
+```
+<div style=”width:400px;height:200px;”>
+  <span style=”float:left;width:auto;height:100%;”>
+           <i style=”position:absolute;float:left;width:100px;height:50px;”>hello</i>
+  </span>
+</div>
+```
+- **「span标签是无法设置宽高的」** 首先`span不是块级元素，是不支持宽高的`。
+- **「float会把浮动元素变成块级元素」** 但是style中有了个`float：left；就使得span变成了块级元素`支持宽高，height:100%;即为，200，宽度由内容撑开。
+- **「绝对定位脱离了文档流」** 但是内容中的` i 是绝对定位，脱离了文档流，所以不占父级空间`，所以span的width=0
+
+--------
+## css动画
+### transform/translate
+参考：[CSS3中 translate、transform和translation，和动画animation](https://blog.csdn.net/cuteydan/article/details/79294642)
+在CSS3中transform主要包括以下几种：`旋转rotate、扭曲skew、缩放scale和移动translate以及矩阵变形matrix`。
+- 旋转：rotate() 顺时针旋转给定的角度，允许负值 rotate(30deg)
+- 扭曲：skew() 元素翻转给定的角度,根据给定的水平线（X 轴）和垂直线（Y 轴）参数：skew(30deg,20deg)
+- 缩放：scale() 放大或缩小，根据给定的宽度（X 轴）和高度（Y 轴）参数： scale(2,4)
+- `移动：translate() 平移`，传进 x,y值，代表沿x轴和y轴平移的距离
+- 所有的2D转换方法组合在一起： matrix() 旋转、缩放、移动以及倾斜元素
+matrix(scale.x ,, , scale.y , translate.x, translate.y)
+- 改变起点位置 transform-origin: bottom left;
+
+### transition(过渡动画)
+
+Transition作用是指定了`某一个属性（如width、left、transform等）在两个值之间如何过渡`。                                                  
+如果某一个元素指定了Transiton，那么当其某个属性改变的时候就会按照Transition指定的方式进行过渡，动画就这么产生了。
+transition主要包含四个属性值：
+（1）执行变换的属性：transition-property；
+（2）变换延续的时间：transition-duration；
+（3）在延续时间段，变换的速率变化：transition-timing-function  //例:平缓进入、先快后慢；
+（4）变换延迟时间：transition-delay。
+需要事件的触发，例如单击、获取焦点、失去焦点等。
+语法：transition:property duration timing-function delay;
+例如：transition:width 2s ease 0s;
+
+### Animation
+Animation`也是通过指定某一个属性（如width、left、transform等）在两个值之间如何过渡来实现动画的`，
+与Transition不同的是：
+1. Animation可以通过`keyframe显式控制当前帧的属性值`，而Transition只能隐式来进行（不能指定每帧的属性值），所以相对而言Animation的功能更加灵活；
+2. Animation通过模拟属性值改变来实现动画，动画结束之后元素的`属性没有变化`；而Transition确实改变了元素的属性值，动画结束之后元素的`属性发生了变化`；这一点，这在实际应用中会产生很大的区别。
+
+Animation模块包括了animation-name、animation-duration、animation-timing-function、animation-delay、animation-iteration-count、animation-play-state等属性。
+
+----
+## 浏览器
+### web表单登录中用到的图形验证码的实现
+ A 返回给浏览器的==html代码==中包含图形验证码和文本字符串,登录前==客户端==判断输入内容和页面中保存的内容是否一致❌
+ B  ==服务器端==在返回的图片和==cookie==中同时包含图形验证码,登录前==客户端==判断输入内容和==cookie==保存的内容是否一致❌
+ D ==浏览器==通过识别图形验证码中的内容和用户输入的内容判断是否一致❌
+> 都把正确的==验证码==文本放在了==客户端==，这是违背了验证码的初衷的。爬虫或者是恶意程序依旧可以通过各种手段获取你嵌入在==html文本或者保存在cookie中==的正确验证码文本，模拟表单提交来达到攻击的目的。
+
+ C  ==服务器端==生成验证码后一方面通过图片将验证码返回给==客户端==,同时在服务器端保存文本的验证码,由==服务器端验证==输入内容是否正确 
+ `客户端出于安全考虑，不能直接在客户端进行验证`
+
+### 浏览器存储技术
+服务器端： session
+|  |  |缺点
+|--|--|--|
+|cookie|cookie会随着每次HTTP请求头信息一起发送，增加了网络流量；存储的数据容量有限，IE6：2K
+|`Flash ShareObject`|解决上面；能跨浏览器。目前最好的本地存储方案|需要安装Flash插件。
+|Google Gear|Google开发出的一种本地存储技术|需要安装Gear组件。
+|`userData`|IE浏览器：640K|它仅在IE下有效。
+|sessionStorage|Firefox2+，仅窗口级别有效|IE不支持、不能实现数据的持久保存。
+|`globalStorage`|Firefox2+，类似于IE的userData。|IE不支持。
+|`localStorage`|Web Storage互联网存储规范中的一部分，Firefox 3.5、Safari 4、IE8|低版本浏览器不支持。
+### web worker 
+当在 HTML 页面中执行脚本时，页面的状态是不可响应的，直到脚本已完成。 
+web worker 是运行在后台的 JavaScript，`独立于其他脚本，不会影响页面的性能`。您可以继续做任何愿意做的事情：点击、选取内容等等，而此时 web worker 在后台运行。 
+### 主流浏览器内核私有属性css前缀
+|  |  |
+|--|--|
+|  mozilla内核 (firefox,flock等)  |   -moz
+| webkit内核(safari,chrome等) |   -webkit
+| opera内核(opera浏览器)     |     -o
+| trident内核(ie浏览器)         |       -ms
+### cookie
+- 正统的cookie分发是通过`扩展HTTP协议`来实现的，`服务器`通过在HTTP的响应头中加上一行特殊的指示以提示`浏览器`按照指示生成相应的cookie。
+- `客户端脚本如JavaScript或者VBScript`也可以生成cookie。
+- cookie的使用是由浏览器按照一定的原则在后台自动发送给服务器的。浏览器检查所有存储的cookie，如果某个cookie所声明的作用范围大于等于将要请求的资源所在的位置，则把该cookie附在请求资源的HTTP请求头上发送给服务器。 
+
+### Web Storage：sessionStorage与localStorage
+
+ - HTML5 提供了两种在`客户端存储数据`的新方法：  
+   `localStorage` - 没有时间限制的数据存储 
+   `sessionStorage` - 针对一个 session 的数据存储  
+ - 之前，这些都是由 cookie 完成的。但是 cookie
+   不适合大量数据的存储，因为它们由每个对服务器的请求来传递，这使得 cookie 速度很慢而且效率也不高。
+  - localStorage和sessionStorage都具有相同的操作方法，例如`setItem()、getItem()和removeItem()`等。
+   setItem存储value 用途：将value存储到key字段 用法：.setItem( key, value)
+- 设置一般用 set 开头， 获取采用 get 开头; 对于键值的话，一般都是` (key, value)`的形式；
+
+### Cookie localStorage sessionStorage的区别
+| 特性 | Cookie | localStorage|sessionStorage|
+|--|--|--|--|
+|数据的生命期|	一般由服务器生成，可设置失效时间。如果在浏览器端生成Cookie，默认是关闭浏览器后失效	|除非被清除，否则永久保存	|仅在当前会话下有效，关闭页面或浏览器后被清除|同
+|存放数据大小|	4K左右|	一般为5MB|同
+|与服务器端通信	|`每次都会携带在HTTP头中`，如果使用cookie保存过多数据会带来性能问题	|`仅在客户端（即浏览器）中保存`，不参与和服务器的通信|同
+|作用域|在所有同源窗口中都是共享的|不在不同的浏览器窗口共享，即使是同一个页面|在所有同源窗口中都是共享的|
+|易用性	|需要程序员自己封装，源生的Cookie接口不友好	|api 接口使用更方便。源生接口可以接受，亦可再次封装来对Object和Array有更好的支持|同
+| | |支持`事件通知机制`，可以将数据更新的通知发送给监听者 |同
+-----------
+## 页面渲染
+### reflow（回流）和repaint（重绘）
+参考：
+[reflow（回流）和repaint（重绘）及其优化](https://blog.csdn.net/ClaireKe/article/details/51375622)
+[JavaScript——浏览器的重绘与回流](https://blog.csdn.net/qq_42269433/article/details/81133772)
+[浏览器渲染原理&&重绘和回流](https://blog.csdn.net/shelly1072/article/details/65654245)
+[浏览器渲染页面过程与页面优化](https://segmentfault.com/a/1190000010298038)
+
+> ==1.创建DOM树—2.创建CSSOM树—3.执行脚本—4.生成渲染树(Render Tree)—5.生成布局(Layout)—6.绘制(Painting)==
+
+1. HTML解析
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181207204104242.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FtYXJsaWFubmE=,size_16,color_FFFFFF,t_70)
+
+2. CSS解析
+根据选择器将CSS规则添加到对应的哈希表
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181207204128333.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FtYXJsaWFubmE=,size_16,color_FFFFFF,t_70)
+
+3. 执行脚本
+4. 渲染树（Render Tree） #不清楚
+- dom tree和样式结构体(cssom)结合后构建呈现树(render tree)
+- `render tree有点类似于dom tree`，但其实区别有很大，`render tree能识别样式，render tree中每个node都有自己的style，而且render tree不包含隐藏的节点(比如display:none的节点，还有head节点)`，因为这些节点不会用于呈现，而且不会影响呈现的，所以就不会包含到 render tree中。
+- Render Tree实际上就是一个计算好样式，与HTML对应的（包括哪些显示，那些不显示）的Tree。
+> 从`本渲染结点`开始，判断此结点是否与选择器链表的当前选择器相匹配。
+> 如果匹配，判断此选择器与下一个选择器的关系：
+> - 如果为NONE，表示`本选择器`是选择器链的最后一个，返回成功；
+> - 如果关系为AND (比如：#id.class)，选择`下一个选择器`与`本渲染结点`继续比较；
+> - 如果关系为CHILD，表示`本选择器`是`下一个选择器`的子结点，返回`下一个选择器`与`下一个渲染结点`的匹配结果；
+> - 否则，关系为DESCENDANT，`选择器和渲染结点`各指向下一个结点，然后将渲染结点继续回溯，直到第一个满足回溯后的选择器的结点，此时将继续判断回溯后的选择器和回溯后的渲染结点是否匹配。
+
+5. 布局（Layout）/ 回流（reflow,relayout）
+
+> 通过渲染树中渲染对象的信息，计算出每一个渲染对象的`位置和尺寸`，将其安置在浏览器窗口的正确位置。
+
+>而有些时候我们会在文档布局完成后对`DOM`进行修改，这时候可能需要重新进行布局，也可称其为`回流`，本质上还是一个布局的过程。
+>- 改变了窗口尺寸或方向
+>- 修改了根元素的尺寸或者字体大小等
+
+
+> 每一个渲染对象的布局流程基本如：
+> 1.计算此渲染对象的`宽度（width）`；
+> 2.遍历此渲染对象的所有`子级`，依次：
+> 	2.1设置子级渲染对象的坐标
+> 	2.2判断是否需要触发子渲染对象的布局或回流方法，计算子渲染对象的高度（height）
+> 3.设置此渲染对象的`高度`：根据子渲染对象的累积高，margin和padding的高度设置其高度；
+> 4.设置此渲染对象`脏位值`为false。
+
+6. 绘制（Painting）Repaint重绘
+绘制流程的顺序：背景颜色——背景图片——边框——子代——轮廓
+
+### Reflow与Repaint
+reflow有如下的几个原因：
+- Initial。网页初始化的时候。
+- Incremental。一些Javascript在操作DOM Tree时。
+- Resize。其些元件的尺寸变了。
+- StyleChange。如果CSS的属性发生变化了。
+- Dirty。几个Incremental的reflow发生在同一个frame的子树上。
+
+repaint：
+- 比如某个CSS的背景色变了
+
+`display:none会触发reflow，而visibility:hidden只会触发repaint，因为没有发现位置变化。`
+
+### 页面的性能指标
+[前端性能——监控起步](http://www.cnblogs.com/chuaWeb/p/PerformanceMonitoring.html)
+- `白屏时间（first Paint Time）`——用户从打开页面开始到页面开始有东西呈现为止
+
+- `首屏时间`——用户浏览器首屏内所有内容都呈现出来所花费的时间
+
+-  `用户可操作时间(dom Interactive)`——用户可以进行正常的点击、输入等操作，默认可以统计domready时间，因为通常会在这时候绑定事件操作
+
+- `总下载时间`——页面所有资源都加载完成并呈现出来所花的时间，即页面 onload 的时间
+
+### .css文件的加载
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181208091844894.png)
+- main1.css和main2.css同时开始加载，先加载完成的优先解析。`link标签是同时加载的，script标签才会加载完一个再加载另一个`
+- 如果main1.css和main2.css中有相同的选择器规则，那么main2.css中的规则将合并(覆盖)main1.css的规则
+### css图层
+Reference：
+[前端性能优化(CSS动画篇)](https://segmentfault.com/a/1190000000490328)
+
+> `浏览器在渲染`一个页面时，会将页面分为很多个图层，图层有大有小，每个图层上有一个或多个节点。在渲染DOM的时候，浏览器所做的工作实际上是：
+> 1. 获取DOM后分割为多个图层
+> 2. 对每个图层的节点计算样式结果（Recalculate style--样式重计算）
+> 3. 为每个节点生成图形和位置（Layout--回流和重布局）
+> 4. 将每个节点绘制填充到图层位图中（Paint Setup和Paint--重绘）
+> 5. 图层作为纹理上传至GPU
+> 6. 符合多个图层到页面上生成最终屏幕图像（Composite Layers--图层重组）
+
+Chrome中满足以下任意情况就会`创建图层`：
+* 3D或透视变换（perspective transform）CSS属性
+* 使用加速视频解码的<video>节点
+* 拥有3D（WebGL）上下文或加速的2D上下文的<canvas>节点
+* 混合插件（如Flash）
+* 对自己的opacity做CSS动画或使用一个动画webkit变换的元素
+* 拥有加速CSS过滤器的元素
+* 元素有一个包含复合层的后代节点（一个元素拥有一个子元素，该子元素在自己的层里）
+* 元素有一个z-index较低且包含一个复合层的兄弟元素（换句话说就是该元素在复合层上面渲染）
+
+需要注意的是，如果图层中某个元素需要重绘，那么整个图层都需要重绘。比如一个图层包含很多节点，其中有个gif图，gif图的每一帧，都会重回整个图层的其他节点，然后生成最终的图层位图。所以这需要通过特殊的方式来强制gif图属于自己一个图层（translateZ(0)或者translate3d(0,0,0)），CSS3的动画也是一样（好在绝大部分情况浏览器自己会为CSS3动画的节点创建图层）
+
+- 在Blink和WebKit的浏览器中，某个元素具有3D或透视变换（perspective transform）的CSS属性`（translateZ(0)或者translate3d(0,0,0)）`，会让浏览器创建单独的图层。✅
+### 一些常用的改变时会触发重布局的属性：
+`盒子模型`相关属性会触发重布局：
+* width
+* height
+* padding
+* margin
+* display
+* border-width
+* border
+* min-height
+
+`定位属性及浮动`也会触发重布局：
+* top
+* bottom
+* left
+* right
+* position
+* float
+* clear
+
+改变节点内部`文字结构`也会触发重布局：
+* text-align
+* overflow-y
+* font-weight
+* overflow
+* font-family
+* line-height
+* vertival-align
+* white-space
+* font-size
+
+这么多常用属性都会触发重布局，可以看到，他们的特点就是`可能修改整个节点的大小或位置`，所以会触发重布局
+
+> `别使用CSS类名做状态标记`
+如果在网页中使用CSS的类来对节点做状态标记，当这些节点的状态标记类修改时，将会触发节点的重绘和重布局。所以在节点上使用CSS类来做状态比较是代价很昂贵的
+
+>`transform不会触发重布局`取代使用left和top属性来修改节点的位置
+
+### 触发重绘的属性
+修改时只触发重绘的属性有：
+* color
+* border-style
+* border-radius
+* visibility
+* text-decoration
+* background
+* background-image
+* background-position
+* background-repeat
+* background-size
+* outline-color
+* outline
+* outline-style
+* outline-width
+* box-shadow
+
+这样可以看到，这些属性都不会修改节点的大小和位置，自然不会触发重布局，但是节点内部的渲染效果进行了改变，所以只需要重绘就可以了
+
+>`手机就算重绘也很慢`
+在重绘时，这些节点会被加载到GPU中进行重绘，这对移动设备如手机的影响还是很大的。因为CPU不如台式机或笔记本电脑，所以绘画巫妖的时间更长。而且CPU与GPU之间的有较大的带宽限制，所以纹理的上传需要一定时间
+
+>`触发图层重组的属性`
+>`透明度竟然不会触发重绘？`
+需要注意的是，上面那些触发重绘的属性里面没有opacity（透明度），很奇怪不是吗？实际上透明度的改变后，GPU在绘画时只是简单的降低之前已经画好的纹理的alpha值来达到效果，并不需要整体的重绘。不过这个前提是这个被修改opacity本身必须是一个图层，如果图层下还有其他节点，GPU也会将他们透明化
+
+### 强迫浏览器创建图层
+在Blink和WebKit的浏览器中，一当一个节点被设定了透明度的相关过渡效果或动画时，浏览器会将其作为一个单独的图层，但很多开发者使用`translateZ(0)`或者`translate3d(0,0,0)`去使浏览器创建图层。这种方式可以消除在动画开始之前的图层创建时间，使得动画尽快开始（创建图层和绘制图层还是比较慢的），而且不会随着抗锯齿而导出突变。不过这种方法需要节制，否则会因为创建过多的图层导致崩溃
+
+### Chrome中的抗锯齿 #不清楚
+Chrome中，非根图层以及透明图层使用grayscale antialiasing而不是subpixel antialiasing，如果抗锯齿方法变化，这个效果将会非常显著。如果你打算预处理一个节点而不打算等到动画开始，可以通过这种强迫浏览器创建图层的方式进行
+
+### 提高css动画性能
+动画的性能提高，需要做的就是减少浏览器在动画运行时所需要做的工作。最好的情况是，改变的属性仅仅印象图层的组合，变换（transform）和透明度（opacity）就属于这种情况。
+
+现代浏览器如Chrome，Firefox，Safari和Opera都对变换和透明度采用硬件加速，但IE10+不是很确定是否硬件加速
+### 3D硬件
+- 移动端要想动画性能流畅，应该使用~~3D硬件加速~~ ，因此最好给页面中的元素尽量添加translate3d或者translateZ(0)来触发3D硬件加速。❌
+
+滥用硬件加速会导致严重性能问题，因为它增加了内存使用，并且它会导致移动端电池寿命减少。
+过多触发3d加速，反而会影响性能。
+
+### 浏览器渲染/重绘/重排
+- 解决浏览器渲染的性能问题时，首要目标就是要避免层的重绘和重排。
+
+- 我们平常会使用`left和top`属性来修改元素的位置，但left和top会触发重布局，取而代之的更好方法是使用`translate`，这个不会触发重布局。
+
+-----------
+## Botstrap
+### 辅助类
+不用记忆 查看稳定就好吧
+### 网格大小
+|  |  适用于|尺寸|
+|--|--|--|
+| .col-xs- |超小屏幕 手机| <768px
+| .col-sm- |小屏幕 平板  |>=768px
+| .col-md- |中等屏幕  |>=992px
+| .col-lg- |大屏幕  |>1200px
+### 打印类
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181205093854286.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FtYXJsaWFubmE=,size_16,color_FFFFFF,t_70)
+### 对浏览器的适用性
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20181207102933637.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FtYXJsaWFubmE=,size_16,color_FFFFFF,t_70)
+###  右对齐
+ `.dropdown-menu `添加` .pull-right `类来向右对齐下拉菜单。 
+
+Bootstrap默认情况下，下拉菜单自动沿着父元素的上沿和左侧被定位为 100% 宽度。 为 .dropdown-menu 添加 `.dropdown-menu-right` 类可以让菜单右对齐。
+
+
+
+
